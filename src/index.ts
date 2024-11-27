@@ -44,7 +44,12 @@ export default {
 
 			// Fetch metadata from the API endpoint
 			const metaDataResponse = await fetch(metaDataEndpointWithId);
-			const metadata = await metaDataResponse.json();
+			let metadata = await metaDataResponse.json();
+
+			if (Array.isArray(metadata)) {
+				metadata = metadata[0];
+			}
+
 			return metadata;
 		}
 
