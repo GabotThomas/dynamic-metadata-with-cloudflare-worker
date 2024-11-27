@@ -127,11 +127,11 @@ export default {
 		// If the URL does not match any patterns, fetch and return the original content
 		console.log('Fetching original content for:', url.pathname);
 		const sourceUrl = new URL(`${domainSource}${url.pathname}`);
-		console.log('Source URL:', sourceUrl);
+		// console.log('Source URL:', sourceUrl);
 		const sourceRequest = new Request(sourceUrl, request);
-		console.log('Source Request:', sourceRequest);
+		// console.log('Source Request:', sourceRequest);
 		const sourceResponse = await fetch(sourceRequest);
-		console.log('Source Response:', sourceResponse);
+		// console.log('Source Response:', sourceResponse);
 
 		// Create a new response without the "X-Robots-Tag" header
 		const modifiedHeaders = new Headers(sourceResponse.headers);

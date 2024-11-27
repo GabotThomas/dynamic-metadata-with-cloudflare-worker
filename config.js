@@ -1,5 +1,5 @@
 export const config = {
-	domainSource: 'https://493ef5dc-b184-44ce-9092-03a00e480822.weweb-preview.io/', // Your WeWeb app preview link
+	domainSource: 'https://493ef5dc-b184-44ce-9092-03a00e480822.weweb-preview.io', // Your WeWeb app preview link
 	patterns: [
 		// {
 		// 	pattern: '/company/[^/]+',
