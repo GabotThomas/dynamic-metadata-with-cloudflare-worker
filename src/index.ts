@@ -6,7 +6,7 @@ export default {
 		const domainSource = config.domainSource;
 		const patterns = config.patterns;
 
-		console.log('Worker started');
+		console.log('Start worker');
 
 		// Parse the request URL
 		const url = new URL(request.url);
@@ -56,8 +56,7 @@ export default {
 		// Handle dynamic page requests
 		const patternConfig = getPatternConfig(url.pathname);
 		if (patternConfig) {
-			console.log('Dynamic page detected:', url.pathname);
-
+			console.log('isPattern:', referer);
 			// Fetch the source page content
 			let source = await fetch(`${domainSource}${url.pathname}`);
 
@@ -70,7 +69,7 @@ export default {
 			});
 
 			const metadata = await requestMetadata(url.pathname, patternConfig.metaDataEndpoint);
-			console.log('Metadata fetched:', metadata);
+			console.log('Metadata fetched:', metadata.title);
 
 			// Create a custom header handler with the fetched metadata
 			const customHeaderHandler = new CustomHeaderHandler(metadata);
@@ -80,8 +79,7 @@ export default {
 
 			// Handle page data requests for the WeWeb app
 		} else if (isPageData(url.pathname)) {
-			console.log('Page data detected:', url.pathname);
-			console.log('Referer:', referer);
+			console.log('notPattern:', referer);
 
 			// Fetch the source data content
 			const sourceResponse = await fetch(`${domainSource}${url.pathname}`);
@@ -93,7 +91,7 @@ export default {
 				const patternConfigForPageData = getPatternConfig(pathname);
 				if (patternConfigForPageData) {
 					const metadata = await requestMetadata(pathname, patternConfigForPageData.metaDataEndpoint);
-					console.log('Metadata fetched:', metadata);
+					console.log('Metadata fetched:', metadata.title);
 
 					// Ensure nested objects exist in the source data
 					sourceData.page = sourceData.page || {};
@@ -120,7 +118,6 @@ export default {
 						sourceData.page.meta.keywords.en = metadata.keywords;
 					}
 
-					console.log('returning file: ', JSON.stringify(sourceData));
 					// Return the modified JSON object
 					return new Response(JSON.stringify(sourceData), {
 						headers: { 'Content-Type': 'application/json' },
@@ -130,13 +127,9 @@ export default {
 		}
 
 		// If the URL does not match any patterns, fetch and return the original content
-		console.log('Fetching original content for:', url.pathname);
 		const sourceUrl = new URL(`${domainSource}${url.pathname}`);
-		// console.log('Source URL:', sourceUrl);
 		const sourceRequest = new Request(sourceUrl, request);
-		// console.log('Source Request:', sourceRequest);
 		const sourceResponse = await fetch(sourceRequest);
-		// console.log('Source Response:', sourceResponse);
 
 		// Create a new response without the "X-Robots-Tag" header
 		const modifiedHeaders = new Headers(sourceResponse.headers);
@@ -158,7 +151,6 @@ class CustomHeaderHandler {
 	element(element) {
 		// Replace the <title> tag content
 		if (element.tagName == 'title') {
-			console.log('Replacing title tag content');
 			element.setInnerContent(this.metadata.title);
 		}
 		// Replace meta tags content
@@ -201,15 +193,12 @@ class CustomHeaderHandler {
 			const type = element.getAttribute('property');
 			switch (type) {
 				case 'og:title':
-					console.log('Replacing og:title');
 					element.setAttribute('content', this.metadata.title);
 					break;
 				case 'og:description':
-					console.log('Replacing og:description');
 					element.setAttribute('content', this.metadata.description);
 					break;
 				case 'og:image':
-					console.log('Replacing og:image');
 					element.setAttribute('content', this.metadata.image);
 					break;
 			}
@@ -217,7 +206,6 @@ class CustomHeaderHandler {
 			// Remove the noindex meta tag
 			const robots = element.getAttribute('name');
 			if (robots === 'robots' && element.getAttribute('content') === 'noindex') {
-				console.log('Removing noindex tag');
 				element.remove();
 			}
 		}
