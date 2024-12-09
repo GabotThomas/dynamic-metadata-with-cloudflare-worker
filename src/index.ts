@@ -46,7 +46,7 @@ export default {
 			const metaDataResponse = await fetch(metaDataEndpointWithId);
 
 			if (!metaDataResponse.ok) {
-				return new Response(JSON.stringify({}), { status: 200 });
+				return null;
 			}
 
 			let metadata = await metaDataResponse.json();
@@ -76,7 +76,7 @@ export default {
 			const metadata = await requestMetadata(url.pathname, patternConfig.metaDataEndpoint);
 
 			if (!metadata) {
-				return new Response(JSON.stringify({}), { status: 200 });
+				return new HTMLRewriter().transform(source);
 			}
 
 			console.log('Metadata fetched:', metadata.title);
@@ -101,6 +101,11 @@ export default {
 				const patternConfigForPageData = getPatternConfig(pathname);
 				if (patternConfigForPageData) {
 					const metadata = await requestMetadata(pathname, patternConfigForPageData.metaDataEndpoint);
+
+					if (!metadata) {
+						return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
+					}
+
 					console.log('Metadata fetched:', metadata.title);
 
 					// Ensure nested objects exist in the source data
