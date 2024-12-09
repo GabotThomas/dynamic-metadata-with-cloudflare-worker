@@ -98,6 +98,22 @@ const jsonPage = async (url: URL, request: Request) => {
 			});
 			// return JSON.stringify(sourceData);
 		}
+
+		const regexCache = /^\/public\/data\/(\d+)\.json$/;
+		if (regexCache.test(url.pathname)) {
+			const uriRegex = /^https?:\/\/[^/]+\/public\/data\/\d+\.json$/;
+			let uri = url.pathname;
+			if (!uriRegex.test(url.pathname)) {
+				uri = referer + url.pathname;
+			}
+
+			// console.log('Cached', url.pathname);
+			const data = await fetch(uri);
+			if (data.ok) {
+				const dataJson = await data.json();
+				console.log('Cached', dataJson);
+			}
+		}
 	}
 
 	return await defaultPage(url, request);
