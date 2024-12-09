@@ -112,7 +112,8 @@ const jsonPage = async (url: URL, request: Request) => {
 			const data = await fetch(uri);
 			if (data.ok) {
 				const dataJson = await data.json();
-				console.log('Cached', dataJson);
+				console.log('loaded');
+				// const id = dataJson.page.id;
 			}
 		}
 	}
