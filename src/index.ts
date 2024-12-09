@@ -30,6 +30,34 @@ export default {
 			return pattern.test(url);
 		}
 
+		async function requestMetadata(url, metaDataEndpoint) {
+			// Remove any trailing slash from the URL
+			const trimmedUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+
+			// Split the trimmed URL by '/' and get the last part: The id
+			const parts = trimmedUrl.split('/');
+			const id = parts[parts.length - 1];
+
+			// Replace the placeholder in metaDataEndpoint with the actual id
+			const placeholderPattern = /{([^}]+)}/;
+			const metaDataEndpointWithId = metaDataEndpoint.replace(placeholderPattern, id);
+
+			// Fetch metadata from the API endpoint
+			const metaDataResponse = await fetch(metaDataEndpointWithId);
+
+			if (!metaDataResponse.ok) {
+				return null;
+			}
+
+			let metadata = await metaDataResponse.json();
+
+			if (Array.isArray(metadata)) {
+				metadata = metadata[0];
+			}
+
+			return metadata;
+		}
+
 		// Handle dynamic page requests
 		const patternConfig = getPatternConfig(url.pathname);
 		if (patternConfig) {
@@ -57,35 +85,52 @@ export default {
 		} else if (isPageData(url.pathname)) {
 			console.log('not first :', referer);
 
+			// Fetch the source data content
+			const sourceResponse = await fetch(`${domainSource}${url.pathname}`);
+			let sourceData = await sourceResponse.json();
+
 			let pathname = referer;
 			pathname = pathname ? pathname + (pathname.endsWith('/') ? '' : '/') : null;
 			if (pathname !== null) {
-				// console.log('headers', JSON.stringify(request.headers));
-				// console.log('url', JSON.stringify(request.url));
+				console.log(JSON.stringify(request));
 				const patternConfigForPageData = getPatternConfig(pathname);
 				if (patternConfigForPageData) {
-					const newPageData = await hydrateMetadata(pathname, patternConfigForPageData);
+					console.log('is partern :', referer);
+					const metadata = await requestMetadata(pathname, patternConfigForPageData.metaDataEndpoint);
 
-					if (newPageData) {
-						return new Response(JSON.stringify(newPageData), {
-							headers: { 'Content-Type': 'application/json' },
-						});
+					if (metadata) {
+						console.log('Metadata fetched:', metadata.title);
+
+						// Ensure nested objects exist in the source data
+						sourceData.page = sourceData.page || {};
+						sourceData.page.title = sourceData.page.title || {};
+						sourceData.page.meta = sourceData.page.meta || {};
+						sourceData.page.meta.desc = sourceData.page.meta.desc || {};
+						sourceData.page.meta.keywords = sourceData.page.meta.keywords || {};
+						sourceData.page.socialTitle = sourceData.page.socialTitle || {};
+						sourceData.page.socialDesc = sourceData.page.socialDesc || {};
+
+						// Update source data with the fetched metadata
+						if (metadata.title) {
+							sourceData.page.title.en = metadata.title;
+							sourceData.page.socialTitle.en = metadata.title;
+						}
+						if (metadata.description) {
+							sourceData.page.meta.desc.en = metadata.description;
+							sourceData.page.socialDesc.en = metadata.description;
+						}
+						if (metadata.image) {
+							sourceData.page.metaImage = metadata.image;
+						}
+						if (metadata.keywords) {
+							sourceData.page.meta.keywords.en = metadata.keywords;
+						}
 					}
-				}
 
-				const cacheRegex = /^\/public\/data\/([\w-]+)\.json$/;
-				if (cacheRegex.test(url.pathname)) {
-					const data = await fetch(url.pathname);
-					const dataJson = await data.json();
-					console.log('dataJson', dataJson);
-					const patternConfigForPageData = getPatternConfig(url.pathname + dataJson.page.paths.default);
-					const newPageData = await hydrateMetadata(url.pathname, patternConfigForPageData);
-
-					if (newPageData) {
-						return new Response(JSON.stringify(newPageData), {
-							headers: { 'Content-Type': 'application/json' },
-						});
-					}
+					// Return the modified JSON object
+					return new Response(JSON.stringify(sourceData), {
+						headers: { 'Content-Type': 'application/json' },
+					});
 				}
 			}
 		}
@@ -104,73 +149,6 @@ export default {
 			headers: modifiedHeaders,
 		});
 	},
-};
-
-const requestMetadata = async (url: string, metaDataEndpoint: string) => {
-	// Remove any trailing slash from the URL
-	const trimmedUrl = url.endsWith('/') ? url.slice(0, -1) : url;
-
-	// Split the trimmed URL by '/' and get the last part: The id
-	const parts = trimmedUrl.split('/');
-	const id = parts[parts.length - 1];
-
-	// Replace the placeholder in metaDataEndpoint with the actual id
-	const placeholderPattern = /{([^}]+)}/;
-	const metaDataEndpointWithId = metaDataEndpoint.replace(placeholderPattern, id);
-
-	// Fetch metadata from the API endpoint
-	const metaDataResponse = await fetch(metaDataEndpointWithId);
-
-	if (!metaDataResponse.ok) {
-		return null;
-	}
-
-	let metadata = await metaDataResponse.json();
-
-	if (Array.isArray(metadata)) {
-		metadata = metadata[0];
-	}
-
-	return metadata;
-};
-
-const hydrateMetadata = async (pathname: string, patternConfigForPageData: any) => {
-	const metadata = await requestMetadata(pathname, patternConfigForPageData.metaDataEndpoint);
-
-	if (metadata) {
-		const domainSource = config.domainSource;
-		const sourceResponse = await fetch(`${domainSource}${pathname}`);
-		const sourceData = await sourceResponse.json();
-
-		console.log('Metadata fetched:', metadata.title);
-
-		// Ensure nested objects exist in the source data
-		sourceData.page = sourceData.page || {};
-		sourceData.page.title = sourceData.page.title || {};
-		sourceData.page.meta = sourceData.page.meta || {};
-		sourceData.page.meta.desc = sourceData.page.meta.desc || {};
-		sourceData.page.meta.keywords = sourceData.page.meta.keywords || {};
-		sourceData.page.socialTitle = sourceData.page.socialTitle || {};
-		sourceData.page.socialDesc = sourceData.page.socialDesc || {};
-
-		// Update source data with the fetched metadata
-		if (metadata.title) {
-			sourceData.page.title.en = metadata.title;
-			sourceData.page.socialTitle.en = metadata.title;
-		}
-		if (metadata.description) {
-			sourceData.page.meta.desc.en = metadata.description;
-			sourceData.page.socialDesc.en = metadata.description;
-		}
-		if (metadata.image) {
-			sourceData.page.metaImage = metadata.image;
-		}
-		if (metadata.keywords) {
-			sourceData.page.meta.keywords.en = metadata.keywords;
-		}
-
-		return sourceData;
-	}
 };
 
 // CustomHeaderHandler class to modify HTML content based on metadata
