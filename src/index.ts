@@ -4,7 +4,6 @@ export default {
 	async fetch(request, env, ctx) {
 		// Extracting configuration values
 		const domainSource = config.domainSource;
-		const patterns = config.patterns;
 
 		console.log('Start worker');
 
@@ -13,29 +12,10 @@ export default {
 		const referer = request.headers.get('Referer');
 
 		// Handle dynamic page requests
-		const patternConfig = getPatternConfig(url.pathname);
-		if (patternConfig) {
-			console.log('isPattern:', referer);
-			// Fetch the source page content
-			let source = await fetch(`${domainSource}${url.pathname}`);
-
-			// Remove "X-Robots-Tag" from the headers
-			const sourceHeaders = new Headers(source.headers);
-			sourceHeaders.delete('X-Robots-Tag');
-			source = new Response(source.body, {
-				status: source.status,
-				headers: sourceHeaders,
-			});
-
-			const metadata = await requestMetadata(url.pathname, patternConfig.metaDataEndpoint);
-
-			// Create a custom header handler with the fetched metadata
-			const customHeaderHandler = new CustomHeaderHandler(metadata);
-
-			// Transform the source HTML with the custom headers
-			return new HTMLRewriter().on('*', customHeaderHandler).transform(source);
-
+		const ssrConfig = getPatternConfig(url.pathname);
+		if (ssrConfig) {
 			// Handle page data requests for the WeWeb app
+			return SSR(url, ssrConfig);
 		} else if (isPageData(url.pathname)) {
 			console.log('not first :', referer);
 
@@ -103,6 +83,29 @@ export default {
 			headers: modifiedHeaders,
 		});
 	},
+};
+
+const SSR = async (url: URL, ssrConfig: any) => {
+	const domainSource = config.domainSource;
+
+	// Fetch the source page content
+	let source = await fetch(`${domainSource}${url.pathname}`);
+
+	// Remove "X-Robots-Tag" from the headers
+	const sourceHeaders = new Headers(source.headers);
+	sourceHeaders.delete('X-Robots-Tag');
+	source = new Response(source.body, {
+		status: source.status,
+		headers: sourceHeaders,
+	});
+
+	const metadata = await requestMetadata(url.pathname, ssrConfig.metaDataEndpoint);
+
+	// Create a custom header handler with the fetched metadata
+	const customHeaderHandler = new CustomHeaderHandler(metadata);
+
+	// Transform the source HTML with the custom headers
+	return new HTMLRewriter().on('*', customHeaderHandler).transform(source);
 };
 
 const hydateMetadata = async () => {};
