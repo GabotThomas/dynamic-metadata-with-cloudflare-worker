@@ -17,55 +17,11 @@ export default {
 			// Handle page data requests for the WeWeb app
 			return SSR(url, ssrConfig);
 		} else if (isPageData(url.pathname)) {
-			console.log('not first :', referer);
-
-			// Fetch the source data content
-			const sourceResponse = await fetch(`${domainSource}${url.pathname}`);
-			let sourceData = await sourceResponse.json();
-
-			let pathname = referer;
-			pathname = pathname ? pathname + (pathname.endsWith('/') ? '' : '/') : null;
-			if (pathname !== null) {
-				console.log(JSON.stringify(request));
-				const patternConfigForPageData = getPatternConfig(pathname);
-				if (patternConfigForPageData) {
-					console.log('is partern :', referer);
-					const metadata = await requestMetadata(pathname, patternConfigForPageData.metaDataEndpoint);
-
-					if (metadata) {
-						console.log('Metadata fetched:', metadata.title);
-
-						// Ensure nested objects exist in the source data
-						sourceData.page = sourceData.page || {};
-						sourceData.page.title = sourceData.page.title || {};
-						sourceData.page.meta = sourceData.page.meta || {};
-						sourceData.page.meta.desc = sourceData.page.meta.desc || {};
-						sourceData.page.meta.keywords = sourceData.page.meta.keywords || {};
-						sourceData.page.socialTitle = sourceData.page.socialTitle || {};
-						sourceData.page.socialDesc = sourceData.page.socialDesc || {};
-
-						// Update source data with the fetched metadata
-						if (metadata.title) {
-							sourceData.page.title.en = metadata.title;
-							sourceData.page.socialTitle.en = metadata.title;
-						}
-						if (metadata.description) {
-							sourceData.page.meta.desc.en = metadata.description;
-							sourceData.page.socialDesc.en = metadata.description;
-						}
-						if (metadata.image) {
-							sourceData.page.metaImage = metadata.image;
-						}
-						if (metadata.keywords) {
-							sourceData.page.meta.keywords.en = metadata.keywords;
-						}
-					}
-
-					// Return the modified JSON object
-					return new Response(JSON.stringify(sourceData), {
-						headers: { 'Content-Type': 'application/json' },
-					});
-				}
+			const json = await jsonPage(url, request);
+			if (json) {
+				return new Response(json, {
+					headers: { 'Content-Type': 'application/json' },
+				});
 			}
 		}
 
@@ -106,6 +62,63 @@ const SSR = async (url: URL, ssrConfig: any) => {
 
 	// Transform the source HTML with the custom headers
 	return new HTMLRewriter().on('*', customHeaderHandler).transform(source);
+};
+
+const jsonPage = async (url: URL, request: Request) => {
+	// console.log('not first :', referer);
+
+	// Fetch the source data content
+	const domainSource = config.domainSource;
+	const sourceResponse = await fetch(`${domainSource}${url.pathname}`);
+	let sourceData = await sourceResponse.json();
+	const referer = request.headers.get('Referer');
+	let pathname = referer;
+	pathname = pathname ? pathname + (pathname.endsWith('/') ? '' : '/') : null;
+	if (pathname !== null) {
+		console.log(JSON.stringify(request));
+		const patternConfigForPageData = getPatternConfig(pathname);
+		if (patternConfigForPageData) {
+			console.log('is partern :', referer);
+			const metadata = await requestMetadata(pathname, patternConfigForPageData.metaDataEndpoint);
+
+			if (metadata) {
+				console.log('Metadata fetched:', metadata.title);
+
+				// Ensure nested objects exist in the source data
+				sourceData.page = sourceData.page || {};
+				sourceData.page.title = sourceData.page.title || {};
+				sourceData.page.meta = sourceData.page.meta || {};
+				sourceData.page.meta.desc = sourceData.page.meta.desc || {};
+				sourceData.page.meta.keywords = sourceData.page.meta.keywords || {};
+				sourceData.page.socialTitle = sourceData.page.socialTitle || {};
+				sourceData.page.socialDesc = sourceData.page.socialDesc || {};
+
+				// Update source data with the fetched metadata
+				if (metadata.title) {
+					sourceData.page.title.en = metadata.title;
+					sourceData.page.socialTitle.en = metadata.title;
+				}
+				if (metadata.description) {
+					sourceData.page.meta.desc.en = metadata.description;
+					sourceData.page.socialDesc.en = metadata.description;
+				}
+				if (metadata.image) {
+					sourceData.page.metaImage = metadata.image;
+				}
+				if (metadata.keywords) {
+					sourceData.page.meta.keywords.en = metadata.keywords;
+				}
+			}
+
+			// // Return the modified JSON object
+			// return new Response(JSON.stringify(sourceData), {
+			// 	headers: { 'Content-Type': 'application/json' },
+			// });
+			return JSON.stringify(sourceData);
+		}
+	}
+
+	return null;
 };
 
 const hydateMetadata = async () => {};
