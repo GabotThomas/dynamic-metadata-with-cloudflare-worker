@@ -92,7 +92,7 @@ export default {
 			let pathname = referer;
 			pathname = pathname ? pathname + (pathname.endsWith('/') ? '' : '/') : null;
 			if (pathname !== null) {
-				console.log('path', pathname);
+				console.log('path', pathname, url.pathname);
 				const patternConfigForPageData = getPatternConfig(pathname);
 				if (patternConfigForPageData) {
 					console.log('is partern :', referer);
