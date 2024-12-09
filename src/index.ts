@@ -44,6 +44,11 @@ export default {
 
 			// Fetch metadata from the API endpoint
 			const metaDataResponse = await fetch(metaDataEndpointWithId);
+
+			if (!metaDataResponse.ok) {
+				return new Response(JSON.stringify({}), { status: 200 });
+			}
+
 			let metadata = await metaDataResponse.json();
 
 			if (Array.isArray(metadata)) {
@@ -69,6 +74,11 @@ export default {
 			});
 
 			const metadata = await requestMetadata(url.pathname, patternConfig.metaDataEndpoint);
+
+			if (!metadata) {
+				return new Response(JSON.stringify({}), { status: 200 });
+			}
+
 			console.log('Metadata fetched:', metadata.title);
 
 			// Create a custom header handler with the fetched metadata
