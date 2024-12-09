@@ -99,7 +99,7 @@ const jsonPage = async (url: URL, request: Request) => {
 			// return JSON.stringify(sourceData);
 		}
 
-		const regexCache = /^\/public\/data\/(\d+)\.json$/;
+		const regexCache = /^\/public\/data\/[^/]+\.json$/;
 		if (regexCache.test(url.pathname)) {
 			console.log('Cacheddd', url.pathname);
 			const uriRegex = /^https?:\/\/[^/]+\/public\/data\/\d+\.json$/;
