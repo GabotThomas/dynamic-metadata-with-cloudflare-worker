@@ -9,20 +9,15 @@ export default {
 
 		// Parse the request URL
 		const url = new URL(request.url);
-		const referer = request.headers.get('Referer');
 
 		// Handle dynamic page requests
 		const ssrConfig = getPatternConfig(url.pathname);
+
 		if (ssrConfig) {
-			// Handle page data requests for the WeWeb app
-			return SSR(url, ssrConfig);
-		} else if (isPageData(url.pathname)) {
-			// const json = await jsonPage(url, request);
-			// if (json) {
-			// 	return new Response(json, {
-			// 		headers: { 'Content-Type': 'application/json' },
-			// 	});
-			// }
+			return await SSR(url, ssrConfig);
+		}
+
+		if (isPageData(url.pathname)) {
 			return await jsonPage(url, request);
 		}
 
