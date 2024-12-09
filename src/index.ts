@@ -50,7 +50,7 @@ const SSR = async (url: URL, ssrConfig: any) => {
 
 const jsonPage = async (url: URL, request: Request) => {
 	// console.log('not first :', referer);
-
+	console.log('jsonPage', url.pathname);
 	// Fetch the source data content
 	const domainSource = config.domainSource;
 	const sourceResponse = await fetch(`${domainSource}${url.pathname}`);
@@ -101,10 +101,11 @@ const jsonPage = async (url: URL, request: Request) => {
 
 		const regexCache = /^\/public\/data\/(\d+)\.json$/;
 		if (regexCache.test(url.pathname)) {
+			console.log('Cacheddd', url.pathname);
 			const uriRegex = /^https?:\/\/[^/]+\/public\/data\/\d+\.json$/;
 			let uri = url.pathname;
 			if (!uriRegex.test(url.pathname)) {
-				uri = referer + url.pathname;
+				uri = domainSource + url.pathname;
 			}
 
 			// console.log('Cached', url.pathname);
