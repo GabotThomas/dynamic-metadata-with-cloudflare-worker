@@ -75,12 +75,6 @@ export default {
 
 			const metadata = await requestMetadata(url.pathname, patternConfig.metaDataEndpoint);
 
-			if (!metadata) {
-				return new HTMLRewriter().transform(source);
-			}
-
-			console.log('Metadata fetched:', metadata.title);
-
 			// Create a custom header handler with the fetched metadata
 			const customHeaderHandler = new CustomHeaderHandler(metadata);
 
@@ -161,9 +155,16 @@ export default {
 class CustomHeaderHandler {
 	constructor(metadata) {
 		this.metadata = metadata;
+
+		if (this.metadata?.title) {
+			console.log('Metadata fetched:', metadata.title);
+		}
 	}
 
 	element(element) {
+		if (!this.metadata) {
+			return;
+		}
 		// Replace the <title> tag content
 		if (element.tagName == 'title') {
 			element.setInnerContent(this.metadata.title);
