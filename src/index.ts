@@ -96,35 +96,33 @@ export default {
 				if (patternConfigForPageData) {
 					const metadata = await requestMetadata(pathname, patternConfigForPageData.metaDataEndpoint);
 
-					if (!metadata) {
-						return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
-					}
+					if (metadata) {
+						console.log('Metadata fetched:', metadata.title);
 
-					console.log('Metadata fetched:', metadata.title);
+						// Ensure nested objects exist in the source data
+						sourceData.page = sourceData.page || {};
+						sourceData.page.title = sourceData.page.title || {};
+						sourceData.page.meta = sourceData.page.meta || {};
+						sourceData.page.meta.desc = sourceData.page.meta.desc || {};
+						sourceData.page.meta.keywords = sourceData.page.meta.keywords || {};
+						sourceData.page.socialTitle = sourceData.page.socialTitle || {};
+						sourceData.page.socialDesc = sourceData.page.socialDesc || {};
 
-					// Ensure nested objects exist in the source data
-					sourceData.page = sourceData.page || {};
-					sourceData.page.title = sourceData.page.title || {};
-					sourceData.page.meta = sourceData.page.meta || {};
-					sourceData.page.meta.desc = sourceData.page.meta.desc || {};
-					sourceData.page.meta.keywords = sourceData.page.meta.keywords || {};
-					sourceData.page.socialTitle = sourceData.page.socialTitle || {};
-					sourceData.page.socialDesc = sourceData.page.socialDesc || {};
-
-					// Update source data with the fetched metadata
-					if (metadata.title) {
-						sourceData.page.title.en = metadata.title;
-						sourceData.page.socialTitle.en = metadata.title;
-					}
-					if (metadata.description) {
-						sourceData.page.meta.desc.en = metadata.description;
-						sourceData.page.socialDesc.en = metadata.description;
-					}
-					if (metadata.image) {
-						sourceData.page.metaImage = metadata.image;
-					}
-					if (metadata.keywords) {
-						sourceData.page.meta.keywords.en = metadata.keywords;
+						// Update source data with the fetched metadata
+						if (metadata.title) {
+							sourceData.page.title.en = metadata.title;
+							sourceData.page.socialTitle.en = metadata.title;
+						}
+						if (metadata.description) {
+							sourceData.page.meta.desc.en = metadata.description;
+							sourceData.page.socialDesc.en = metadata.description;
+						}
+						if (metadata.image) {
+							sourceData.page.metaImage = metadata.image;
+						}
+						if (metadata.keywords) {
+							sourceData.page.meta.keywords.en = metadata.keywords;
+						}
 					}
 
 					// Return the modified JSON object
