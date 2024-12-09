@@ -12,52 +12,6 @@ export default {
 		const url = new URL(request.url);
 		const referer = request.headers.get('Referer');
 
-		// Function to get the pattern configuration that matches the URL
-		function getPatternConfig(url) {
-			for (const patternConfig of patterns) {
-				const regex = new RegExp(patternConfig.pattern);
-				let pathname = url + (url.endsWith('/') ? '' : '/');
-				if (regex.test(pathname)) {
-					return patternConfig;
-				}
-			}
-			return null;
-		}
-
-		// Function to check if the URL matches the page data pattern (For the WeWeb app)
-		function isPageData(url) {
-			const pattern = /\/public\/data\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.json/;
-			return pattern.test(url);
-		}
-
-		async function requestMetadata(url, metaDataEndpoint) {
-			// Remove any trailing slash from the URL
-			const trimmedUrl = url.endsWith('/') ? url.slice(0, -1) : url;
-
-			// Split the trimmed URL by '/' and get the last part: The id
-			const parts = trimmedUrl.split('/');
-			const id = parts[parts.length - 1];
-
-			// Replace the placeholder in metaDataEndpoint with the actual id
-			const placeholderPattern = /{([^}]+)}/;
-			const metaDataEndpointWithId = metaDataEndpoint.replace(placeholderPattern, id);
-
-			// Fetch metadata from the API endpoint
-			const metaDataResponse = await fetch(metaDataEndpointWithId);
-
-			if (!metaDataResponse.ok) {
-				return null;
-			}
-
-			let metadata = await metaDataResponse.json();
-
-			if (Array.isArray(metadata)) {
-				metadata = metadata[0];
-			}
-
-			return metadata;
-		}
-
 		// Handle dynamic page requests
 		const patternConfig = getPatternConfig(url.pathname);
 		if (patternConfig) {
@@ -149,6 +103,54 @@ export default {
 			headers: modifiedHeaders,
 		});
 	},
+};
+
+const hydateMetadata = async () => {};
+
+// Function to get the pattern configuration that matches the URL
+const getPatternConfig = (url: string) => {
+	for (const patternConfig of config.patterns) {
+		const regex = new RegExp(patternConfig.pattern);
+		let pathname = url + (url.endsWith('/') ? '' : '/');
+		if (regex.test(pathname)) {
+			return patternConfig;
+		}
+	}
+	return null;
+};
+
+// Function to check if the URL matches the page data pattern (For the WeWeb app)
+const isPageData = (url: string) => {
+	const pattern = /\/public\/data\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.json/;
+	return pattern.test(url);
+};
+
+const requestMetadata = async (url: string, metaDataEndpoint: string) => {
+	// Remove any trailing slash from the URL
+	const trimmedUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+
+	// Split the trimmed URL by '/' and get the last part: The id
+	const parts = trimmedUrl.split('/');
+	const id = parts[parts.length - 1];
+
+	// Replace the placeholder in metaDataEndpoint with the actual id
+	const placeholderPattern = /{([^}]+)}/;
+	const metaDataEndpointWithId = metaDataEndpoint.replace(placeholderPattern, id);
+
+	// Fetch metadata from the API endpoint
+	const metaDataResponse = await fetch(metaDataEndpointWithId);
+
+	if (!metaDataResponse.ok) {
+		return null;
+	}
+
+	let metadata = await metaDataResponse.json();
+
+	if (Array.isArray(metadata)) {
+		metadata = metadata[0];
+	}
+
+	return metadata;
 };
 
 // CustomHeaderHandler class to modify HTML content based on metadata
