@@ -17,27 +17,16 @@ export default {
 			// Handle page data requests for the WeWeb app
 			return SSR(url, ssrConfig);
 		} else if (isPageData(url.pathname)) {
-			const json = await jsonPage(url, request);
-			if (json) {
-				return new Response(json, {
-					headers: { 'Content-Type': 'application/json' },
-				});
-			}
+			// const json = await jsonPage(url, request);
+			// if (json) {
+			// 	return new Response(json, {
+			// 		headers: { 'Content-Type': 'application/json' },
+			// 	});
+			// }
+			return await jsonPage(url, request);
 		}
 
-		// If the URL does not match any patterns, fetch and return the original content
-		const sourceUrl = new URL(`${domainSource}${url.pathname}`);
-		const sourceRequest = new Request(sourceUrl, request);
-		const sourceResponse = await fetch(sourceRequest);
-
-		// Create a new response without the "X-Robots-Tag" header
-		const modifiedHeaders = new Headers(sourceResponse.headers);
-		modifiedHeaders.delete('X-Robots-Tag');
-
-		return new Response(sourceResponse.body, {
-			status: sourceResponse.status,
-			headers: modifiedHeaders,
-		});
+		return await defaultPage(url, request);
 	},
 };
 
@@ -75,10 +64,8 @@ const jsonPage = async (url: URL, request: Request) => {
 	let pathname = referer;
 	pathname = pathname ? pathname + (pathname.endsWith('/') ? '' : '/') : null;
 	if (pathname !== null) {
-		console.log(JSON.stringify(request));
 		const patternConfigForPageData = getPatternConfig(pathname);
 		if (patternConfigForPageData) {
-			console.log('is partern :', referer);
 			const metadata = await requestMetadata(pathname, patternConfigForPageData.metaDataEndpoint);
 
 			if (metadata) {
@@ -110,15 +97,32 @@ const jsonPage = async (url: URL, request: Request) => {
 				}
 			}
 
-			// // Return the modified JSON object
-			// return new Response(JSON.stringify(sourceData), {
-			// 	headers: { 'Content-Type': 'application/json' },
-			// });
-			return JSON.stringify(sourceData);
+			// Return the modified JSON object
+			return new Response(JSON.stringify(sourceData), {
+				headers: { 'Content-Type': 'application/json' },
+			});
+			// return JSON.stringify(sourceData);
 		}
 	}
 
-	return null;
+	return await defaultPage(url, request);
+};
+
+const defaultPage = async (url: URL, request: Request) => {
+	// If the URL does not match any patterns, fetch and return the original content
+	const domainSource = config.domainSource;
+	const sourceUrl = new URL(`${domainSource}${url.pathname}`);
+	const sourceRequest = new Request(sourceUrl, request);
+	const sourceResponse = await fetch(sourceRequest);
+
+	// Create a new response without the "X-Robots-Tag" header
+	const modifiedHeaders = new Headers(sourceResponse.headers);
+	modifiedHeaders.delete('X-Robots-Tag');
+
+	return new Response(sourceResponse.body, {
+		status: sourceResponse.status,
+		headers: modifiedHeaders,
+	});
 };
 
 const hydateMetadata = async () => {};
