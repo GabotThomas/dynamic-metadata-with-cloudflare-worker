@@ -83,7 +83,7 @@ export default {
 
 			// Handle page data requests for the WeWeb app
 		} else if (isPageData(url.pathname)) {
-			console.log('notPattern:', referer);
+			console.log('not first :', referer);
 
 			// Fetch the source data content
 			const sourceResponse = await fetch(`${domainSource}${url.pathname}`);
@@ -92,8 +92,10 @@ export default {
 			let pathname = referer;
 			pathname = pathname ? pathname + (pathname.endsWith('/') ? '' : '/') : null;
 			if (pathname !== null) {
+				console.log('path', pathname);
 				const patternConfigForPageData = getPatternConfig(pathname);
 				if (patternConfigForPageData) {
+					console.log('is partern :', referer);
 					const metadata = await requestMetadata(pathname, patternConfigForPageData.metaDataEndpoint);
 
 					if (metadata) {
