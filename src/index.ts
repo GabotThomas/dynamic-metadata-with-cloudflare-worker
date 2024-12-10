@@ -117,9 +117,7 @@ const jsonPage = async (url: URL, request: Request) => {
 				const path = dataJson.page?.paths?.default;
 				if (path == 'company/{{idCompany|}}') {
 					console.log('Cached');
-					console.log(JSON.stringify(request.headers));
-					console.log(JSON.stringify(env));
-					console.log(JSON.stringify(ctx));
+					console.log(JSON.stringify(request));
 				}
 			}
 		}
