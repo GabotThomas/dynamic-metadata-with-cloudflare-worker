@@ -98,29 +98,6 @@ const jsonPage = async (url: URL, request: Request) => {
 			});
 			// return JSON.stringify(sourceData);
 		}
-
-		const regexCache = /^\/public\/data\/[^/]+\.json$/;
-		if (regexCache.test(url.pathname)) {
-			// console.log('Cacheddd', url.pathname);
-			const uriRegex = /^https?:\/\/[^/]+\/public\/data\/\d+\.json$/;
-			let uri = url.pathname;
-			if (!uriRegex.test(url.pathname)) {
-				uri = domainSource + url.pathname;
-			}
-
-			// console.log('Cached', url.pathname);
-			const data = await fetch(uri);
-			if (data.ok) {
-				const dataJson = await data.json();
-				// console.log('loaded');
-				const id = dataJson.page?.id;
-				const path = dataJson.page?.paths?.default;
-				if (path == 'company/{{idCompany|}}') {
-					console.log('Cached');
-					console.log(JSON.stringify(request));
-				}
-			}
-		}
 	}
 
 	return await defaultPage(url, request);
