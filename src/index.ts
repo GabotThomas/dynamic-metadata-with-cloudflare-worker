@@ -50,7 +50,7 @@ const SSR = async (url: URL, ssrConfig: any) => {
 
 const jsonPage = async (url: URL, request: Request) => {
 	// console.log('not first :', referer);
-	console.log('jsonPage', url.pathname);
+	// console.log('jsonPage', url.pathname);
 	// Fetch the source data content
 	const domainSource = config.domainSource;
 	const sourceResponse = await fetch(`${domainSource}${url.pathname}`);
@@ -101,7 +101,7 @@ const jsonPage = async (url: URL, request: Request) => {
 
 		const regexCache = /^\/public\/data\/[^/]+\.json$/;
 		if (regexCache.test(url.pathname)) {
-			console.log('Cacheddd', url.pathname);
+			// console.log('Cacheddd', url.pathname);
 			const uriRegex = /^https?:\/\/[^/]+\/public\/data\/\d+\.json$/;
 			let uri = url.pathname;
 			if (!uriRegex.test(url.pathname)) {
@@ -115,7 +115,12 @@ const jsonPage = async (url: URL, request: Request) => {
 				// console.log('loaded');
 				const id = dataJson.page?.id;
 				const path = dataJson.page?.paths?.default;
-				console.log('Cached', id, path);
+				if (path == 'company/{{idCompany|}}') {
+					console.log('Cached');
+					console.log(JSON.stringify(request.headers));
+					console.log(JSON.stringify(env));
+					console.log(JSON.stringify(ctx));
+				}
 			}
 		}
 	}
