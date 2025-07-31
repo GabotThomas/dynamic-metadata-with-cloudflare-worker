@@ -1,6 +1,10 @@
 import { config } from '../config.js';
 
 export default {
+	async fetch(request, env, ctx) {
+		// TEMPORAIRE : ne fait rien, laisse passer à l’origine
+		return await fetch(request);
+	},
 	// async fetch(request, env, ctx) {
 	// 	// Extracting configuration values
 	// 	const domainSource = config.domainSource;
@@ -23,10 +27,6 @@ export default {
 
 	// 	return await defaultPage(url, request);
 	// },
-	async fetch(request, env, ctx) {
-		// TEMPORAIRE : ne fait rien, laisse passer à l’origine
-		return fetch(request);
-	},
 };
 
 const SSR = async (url: URL, ssrConfig: any) => {
