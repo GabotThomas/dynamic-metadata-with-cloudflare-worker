@@ -2,27 +2,34 @@ import { config } from '../config.js';
 
 export default {
 	async fetch(request, env, ctx) {
-		// Extracting configuration values
-		const domainSource = config.domainSource;
-
-		console.log('Start worker');
-
-		// Parse the request URL
 		const url = new URL(request.url);
+		const origin = config.domainSource;
 
-		// Handle dynamic page requests
-		const ssrConfig = getPatternConfig(url.pathname);
-
-		if (ssrConfig) {
-			return await SSR(url, ssrConfig);
-		}
-
-		if (isPageData(url.pathname)) {
-			return await jsonPage(url, request);
-		}
-
-		return await defaultPage(url, request);
+		const targetUrl = origin + url.pathname + url.search;
+		return fetch(targetUrl, request);
 	},
+	// async fetch(request, env, ctx) {
+	// 	// Extracting configuration values
+	// 	const domainSource = config.domainSource;
+
+	// 	console.log('Start worker');
+
+	// 	// Parse the request URL
+	// 	const url = new URL(request.url);
+
+	// 	// Handle dynamic page requests
+	// 	const ssrConfig = getPatternConfig(url.pathname);
+
+	// 	if (ssrConfig) {
+	// 		return await SSR(url, ssrConfig);
+	// 	}
+
+	// 	if (isPageData(url.pathname)) {
+	// 		return await jsonPage(url, request);
+	// 	}
+
+	// 	return await defaultPage(url, request);
+	// },
 };
 
 const SSR = async (url: URL, ssrConfig: any) => {
