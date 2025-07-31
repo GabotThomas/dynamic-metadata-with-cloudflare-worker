@@ -10,12 +10,12 @@ export default {
 		// Parse the request URL
 		const url = new URL(request.url);
 
-		// // Handle dynamic page requests
-		// const ssrConfig = getPatternConfig(url.pathname);
+		// Handle dynamic page requests
+		const ssrConfig = getPatternConfig(url.pathname);
 
-		// if (ssrConfig) {
-		// 	return await SSR(url, ssrConfig);
-		// }
+		if (ssrConfig) {
+			return await SSR(url, ssrConfig);
+		}
 
 		if (isPageData(url.pathname)) {
 			return await jsonPage(url, request);
