@@ -21,6 +21,7 @@ export default {
 	// 	const ssrConfig = getPatternConfig(url.pathname);
 
 	// 	if (ssrConfig) {
+
 	// 		return await SSR(url, ssrConfig);
 	// 	}
 
