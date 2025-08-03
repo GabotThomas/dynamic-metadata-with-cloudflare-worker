@@ -1,6 +1,7 @@
 import { config } from '../config.js';
 
 // Type declaration for HTMLRewriter (Cloudflare Workers API)
+
 declare class HTMLRewriter {
 	on(selector: string, handler: any): HTMLRewriter;
 	transform(response: Response): Response;
