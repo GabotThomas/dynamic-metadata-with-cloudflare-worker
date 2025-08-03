@@ -12,6 +12,7 @@ export default {
 		const origin = config.domainSource;
 
 		const targetUrl = origin + url.pathname + url.search;
+
 		return fetch(targetUrl, request);
 	},
 	// async fetch(request, env, ctx) {
