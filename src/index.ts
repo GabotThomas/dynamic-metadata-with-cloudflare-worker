@@ -1,7 +1,13 @@
 import { config } from '../config.js';
 
+// Type declaration for HTMLRewriter (Cloudflare Workers API)
+declare class HTMLRewriter {
+	on(selector: string, handler: any): HTMLRewriter;
+	transform(response: Response): Response;
+}
+
 export default {
-	async fetch(request, env, ctx) {
+	async fetch(request: Request, env: any, ctx: any) {
 		const url = new URL(request.url);
 		const origin = config.domainSource;
 
@@ -178,7 +184,9 @@ const requestMetadata = async (url: string, metaDataEndpoint: string) => {
 
 // CustomHeaderHandler class to modify HTML content based on metadata
 class CustomHeaderHandler {
-	constructor(metadata) {
+	private metadata: any;
+
+	constructor(metadata: any) {
 		this.metadata = metadata;
 
 		if (this.metadata?.title) {
@@ -186,7 +194,7 @@ class CustomHeaderHandler {
 		}
 	}
 
-	element(element) {
+	element(element: any) {
 		if (!this.metadata) {
 			return;
 		}
