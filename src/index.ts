@@ -1,36 +1,37 @@
 import { config } from '../config.js';
 
+// Type declaration for HTMLRewriter (Cloudflare Workers API)
+declare class HTMLRewriter {
+	on(selector: string, handler: any): HTMLRewriter;
+	transform(response: Response): Response;
+}
+
 export default {
-	async fetch(request, env, ctx) {
+	async fetch(request: Request, env: any, ctx: any) {
+		// Extracting configuration values
+		const domainSource = config.domainSource;
+
+		console.log('Start worker');
+
+		// Parse the request URL
 		const url = new URL(request.url);
-		const origin = config.domainSource;
 
-		const targetUrl = origin + url.pathname + url.search;
-		return fetch(targetUrl, request);
+		// Handle dynamic page requests
+		const ssrConfig = getPatternConfig(url.pathname);
+
+		if (ssrConfig) {
+			console.log('SSR config found');
+			return await SSR(url, ssrConfig);
+		}
+
+		if (isPageData(url.pathname)) {
+			console.log('Page data found');
+			return await jsonPage(url, request);
+		}
+
+		console.log('Default fetch');
+		return await defaultPage(url, request);
 	},
-	// async fetch(request, env, ctx) {
-	// 	// Extracting configuration values
-	// 	const domainSource = config.domainSource;
-
-	// 	console.log('Start worker');
-
-	// 	// Parse the request URL
-	// 	const url = new URL(request.url);
-
-	// 	// Handle dynamic page requests
-	// 	const ssrConfig = getPatternConfig(url.pathname);
-
-	// 	if (ssrConfig) {
-
-	// 		return await SSR(url, ssrConfig);
-	// 	}
-
-	// 	if (isPageData(url.pathname)) {
-	// 		return await jsonPage(url, request);
-	// 	}
-
-	// 	return await defaultPage(url, request);
-	// },
 };
 
 const SSR = async (url: URL, ssrConfig: any) => {
@@ -179,7 +180,9 @@ const requestMetadata = async (url: string, metaDataEndpoint: string) => {
 
 // CustomHeaderHandler class to modify HTML content based on metadata
 class CustomHeaderHandler {
-	constructor(metadata) {
+	private metadata: any;
+
+	constructor(metadata: any) {
 		this.metadata = metadata;
 
 		if (this.metadata?.title) {
@@ -187,7 +190,7 @@ class CustomHeaderHandler {
 		}
 	}
 
-	element(element) {
+	element(element: any) {
 		if (!this.metadata) {
 			return;
 		}
