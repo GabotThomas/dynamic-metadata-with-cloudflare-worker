@@ -9,30 +9,31 @@ declare class HTMLRewriter {
 
 export default {
 	async fetch(request: Request, env: any, ctx: any) {
-		// Extracting configuration values
-		const domainSource = config.domainSource;
-
-		console.log('Start worker');
-
-		// Parse the request URL
 		const url = new URL(request.url);
+		const origin = config.domainSource;
 
-		// Handle dynamic page requests
-		const ssrConfig = getPatternConfig(url.pathname);
-
-		if (ssrConfig) {
-			console.log('SSR config found');
-			return await SSR(url, ssrConfig);
-		}
-
-		if (isPageData(url.pathname)) {
-			console.log('Page data found');
-			return await jsonPage(url, request);
-		}
-
-		console.log('Default fetch');
-		return await defaultPage(url, request);
+		const targetUrl = origin + url.pathname + url.search;
+		return fetch(targetUrl, request);
 	},
+	// async fetch(request: Request, env: any, ctx: any) {
+	// 	// Extracting configuration values
+	// 	const domainSource = config.domainSource;
+	// 	console.log('Start worker');
+	// 	// Parse the request URL
+	// 	const url = new URL(request.url);
+	// 	// Handle dynamic page requests
+	// 	const ssrConfig = getPatternConfig(url.pathname);
+	// 	if (ssrConfig) {
+	// 		console.log('SSR config found');
+	// 		return await SSR(url, ssrConfig);
+	// 	}
+	// 	if (isPageData(url.pathname)) {
+	// 		console.log('Page data found');
+	// 		return await jsonPage(url, request);
+	// 	}
+	// 	console.log('Default fetch');
+	// 	return await defaultPage(url, request);
+	// },
 };
 
 const SSR = async (url: URL, ssrConfig: any) => {
