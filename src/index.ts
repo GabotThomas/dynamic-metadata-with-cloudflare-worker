@@ -13,6 +13,14 @@ export default {
 		const origin = config.domainSource;
 
 		const targetUrl = origin + url.pathname + url.search;
+
+		const ssrConfig = getPatternConfig(url.pathname);
+
+		if (ssrConfig) {
+			console.log('SSR config found');
+			return await SSR(url, ssrConfig);
+		}
+
 		return fetch(targetUrl, request);
 	},
 	// async fetch(request: Request, env: any, ctx: any) {
