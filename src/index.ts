@@ -12,6 +12,9 @@ export default {
 		const url = new URL(request.url);
 		const origin = config.domainSource;
 
+		console.log('GOING TO FETCH');
+		console.log(JSON.stringify(url));
+
 		const targetUrl = origin + url.pathname + url.search;
 
 		const ssrConfig = getPatternConfig(url.pathname);
@@ -23,8 +26,6 @@ export default {
 		const response = await fetch(targetUrl, request);
 
 		const responseHeaders = new Headers(response.headers);
-
-		console.log(JSON.stringify(url));
 
 		// Check if this is the home page and remove X-Robots-Tag header
 		if (isPattern(url.pathname, '/')) {
