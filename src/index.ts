@@ -1,38 +1,58 @@
 import { config } from '../config.js';
 
 // Type declaration for HTMLRewriter (Cloudflare Workers API)
+
 declare class HTMLRewriter {
 	on(selector: string, handler: any): HTMLRewriter;
 	transform(response: Response): Response;
 }
 
 export default {
-	// async fetch(request: Request, env: any, ctx: any) {
-	// 	const url = new URL(request.url);
-	// 	const origin = config.domainSource;
-	// 	const targetUrl = origin + url.pathname + url.search;
-	// 	return fetch(targetUrl, request);
-	// },
-
 	async fetch(request: Request, env: any, ctx: any) {
-		// Extracting configuration values
-		const domainSource = config.domainSource;
-		console.log('Start worker');
-		// Parse the request URL
 		const url = new URL(request.url);
-		// Handle dynamic page requests
+		const origin = config.domainSource;
+
+		const targetUrl = origin + url.pathname + url.search;
+
 		const ssrConfig = getPatternConfig(url.pathname);
+
 		if (ssrConfig) {
-			console.log('SSR config found');
 			return await SSR(url, ssrConfig);
 		}
-		if (isPageData(url.pathname)) {
-			console.log('Page data found');
-			return await jsonPage(url, request);
+
+		const response = await fetch(targetUrl, request);
+
+		const responseHeaders = new Headers(response.headers);
+
+		// Check if this is the home page and remove X-Robots-Tag header
+		if (isPattern(url.pathname, '/')) {
+			responseHeaders.delete('X-Robots-Tag');
 		}
-		console.log('Default fetch');
-		return await defaultPage(url, request);
+
+		return new Response(response.body, {
+			status: response.status,
+			headers: responseHeaders,
+		});
 	},
+	// async fetch(request: Request, env: any, ctx: any) {
+	// 	// Extracting configuration values
+	// 	const domainSource = config.domainSource;
+	// 	console.log('Start worker');
+	// 	// Parse the request URL
+	// 	const url = new URL(request.url);
+	// 	// Handle dynamic page requests
+	// 	const ssrConfig = getPatternConfig(url.pathname);
+	// 	if (ssrConfig) {
+	// 		console.log('SSR config found');
+	// 		return await SSR(url, ssrConfig);
+	// 	}
+	// 	if (isPageData(url.pathname)) {
+	// 		console.log('Page data found');
+	// 		return await jsonPage(url, request);
+	// 	}
+	// 	console.log('Default fetch');
+	// 	return await defaultPage(url, request);
+	// },
 };
 
 const SSR = async (url: URL, ssrConfig: any) => {
@@ -134,15 +154,19 @@ const defaultPage = async (url: URL, request: Request) => {
 const hydateMetadata = async () => {};
 
 // Function to get the pattern configuration that matches the URL
-const getPatternConfig = (url: string) => {
+const getPatternConfig = (pathname: string) => {
 	for (const patternConfig of config.patterns) {
-		const regex = new RegExp(patternConfig.pattern);
-		let pathname = url + (url.endsWith('/') ? '' : '/');
-		if (regex.test(pathname)) {
+		if (isPattern(pathname, patternConfig.pattern)) {
 			return patternConfig;
 		}
 	}
 	return null;
+};
+
+const isPattern = (pathname: string, pattern: string) => {
+	const regex = new RegExp(pattern);
+	let _pathname = pathname + (pathname.endsWith('/') ? '' : '/');
+	return regex.test(_pathname);
 };
 
 // Function to check if the URL matches the page data pattern (For the WeWeb app)
