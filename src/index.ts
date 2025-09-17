@@ -12,9 +12,6 @@ export default {
 		const url = new URL(request.url);
 		const origin = config.domainSource;
 
-		console.log('GOING TO FETCH');
-		console.log(JSON.stringify(url));
-
 		const targetUrl = origin + url.pathname + url.search;
 
 		const ssrConfig = getPatternConfig(url.pathname);
@@ -28,7 +25,12 @@ export default {
 		const responseHeaders = new Headers(response.headers);
 
 		// Check if this is the home page and remove X-Robots-Tag header
-		if (isPattern(url.pathname, '/')) {
+		if (
+			url.hostname == 'frenchdetailers.com' ||
+			url.hostname == 'www.frenchdetailers.com' ||
+			url.hostname == 'frenchdetailers.fr' ||
+			url.hostname == 'www.frenchdetailers.fr'
+		) {
 			responseHeaders.delete('X-Robots-Tag');
 		}
 
