@@ -24,6 +24,8 @@ export default {
 
 		const responseHeaders = new Headers(response.headers);
 
+		console.log(JSON.stringify(url));
+
 		// Check if this is the home page and remove X-Robots-Tag header
 		if (isPattern(url.pathname, '/')) {
 			responseHeaders.delete('X-Robots-Tag');
